@@ -1,15 +1,15 @@
 #Author: Angel Manuel Gonzalez Lopez
 
-# v1.2
-# Metodo de Gauss-Jordan
-# dada una matriz invertible que no tenga ningun 0 en su diagonal principal
-# calcula su inversa usando el metodo de gauss jordan
+# v1.3
+# Calcular determinante usando matriz diagonal 
+# dada una matriz A  
+# reducir la matriz A o A|b mediante trasnformaciones del tipo Rj ->Rj+cRk
 # en formato LaTeX
-
 
 # Input:
 # En la primera linea un entero N
 # En las sigueintes N lineas cotiene N numeros (fracciones o enteros o decimales) separados por un espacio
+
 
 import numpy as np
 from fractions import Fraction
@@ -37,24 +37,18 @@ def ImprimirMatriz(matrix):
         print("\b\b\b  \\\\ ")
     print("\\end{pmatrix}")
 
-def ImprimirMatrizAumentada(matrix):
-    mitadColumnas = len(matrix[0]) // 2
-    print("\\begin{pmatrix}")
+def ImprimirDetMatriz(matrix, N):
+    print("\\begin{array}{|", end='')
+    for i in range(N):
+        print("c", end='')
+    print("|}")
     for fila in matrix:
         print("\t", end='')
-        #primera parte
-        for esFraccion in fila[:mitadColumnas]:
-            ImprimirPosibleFraccion(esFraccion)
-            print(" & ", end='')
-        #mitad
-        print(" \\vline & ", end='')
-        #segunda parte
-        for esFraccion in fila[mitadColumnas:]:
+        for esFraccion in fila:
             ImprimirPosibleFraccion(esFraccion)
             print(" & ", end='')
         print("\b\b\b  \\\\ ")
-    print("\\end{pmatrix}")
-
+    print("\\end{array}")
 
 # # # # # # # # # OPERACIONES ELEMENTALES  # # # # # # # # # 
 # Ri <-> Rj
@@ -94,86 +88,76 @@ def PRINTSumarFila(i, j, c, primera):
     ImprimirPosibleFraccion(c)
     print("R_%d}"% (j+1))
 
-# # # # # # # # # ENTRADA DATOS  # # # # # # # # # 
-
-N = int(input())
-matriz = []
-for i in range(N):
-    fila = input().split()
-    fila = [Fraction(e) for e in fila]    
-    matriz.append(fila)
-
-print("\n")
-
-
-
-# # # # # # # # # MATRIZ AUMENTADA  # # # # # # # # # 
-#identidad de tamano N
-id = []
-for i in range(N):
-    fila = []
-    for j in range(N):
-        if i == j:
-            fila.append(1)
-        else:
-            fila.append(0)
-    id.append(fila)
-
-#aumentada
-mA = []
-for i in range(N):
-    mA.append( matriz[i]+id[i] )
-
-print("\n")
-
-ImprimirMatriz(matriz)
-print("Le aumentamos la identidad")
-ImprimirMatrizAumentada(mA)
-
-
-print("\n\n\n")
-
 
 
 # # # # # # # # # Gauss Jordan  # # # # # # # # # 
-#notar que la matriz era de N| por M_, así mA es de N| por 2M_ 
-mA = np.array(mA)
-print("\\begin{align*}")
-ImprimirMatrizAumentada(mA)
-PrimerT= True;
-for n in range(N):
-    if mA[n][n]!=0:
-        #poner primera fila a 1
-        if mA[n][n]!=1:
-            c= Fraction(1)/mA[n][n]
-            FilaPorMultiplo(mA, n, c )
-            #imprimir
-            PRINTFilaPorMultiplo(n,c, PrimerT )
-            ImprimirMatrizAumentada(mA)
-            PrimerT=False
+# # # # # # # # # Triangular Superior  # # # # # # # # # 
+def MatrizTriangularSuperior(A,N):
+    PrimerT= True;
+    print("\\begin{align*}")
+    ImprimirMatriz(A)
+    for n in range(N):
+        if A[n][n]!=0:
+            for i in range(n,N):
+                #poner columna i a puros 0
+                if i!=n and A[i][n]!=0:
+                    c= -A[i][n]/A[n][n]
+                    SumarFila(A, i, n, c )
+                    #impirmir
+                    PRINTSumarFila(i, n, c, PrimerT )
+                    PrimerT=False
+                    ImprimirMatriz(A)
+        else:
+            #hay que agregar que entonces busque otro candidato para poder cancelar el que se quiere
+            print("hijoles")
+    print("\\end{align*}")
 
-        for i in range(N):
-            #poner columna i a puros 0
-            if i!=n and mA[i][n]!=0:
-                c= -mA[i][n]
-                SumarFila(mA, i, n, c )
-                #impirmir
-                PRINTSumarFila(i, n, c, PrimerT )
-                ImprimirMatrizAumentada(mA)
-                PrimerT=False
 
-    else:
-        print("hijoles")
+# # # # # # # # # Determinante Triangular Superior  # # # # # # # # # 
+def DeterminanteMatrizTriangularSuperior(A,N):
+    Det= Fraction(1);
+    for n in range(N):
+        Det*= A[n][n]
+        print("\\Pa{", end='')
+        ImprimirPosibleFraccion(A[n][n])
+        print("}", end='')
+    return Det;
 
-print("\\end{align*}")
 
-# # # # # # # # # Imprimir la inversa  # # # # # # # # # 
-#recordatorio, todo esto es suponinedo que gauus Jordan funciona
-mitadColumnas = len(mA[0]) // 2
-LaMatrizInversa = mA[:,mitadColumnas:]
+# # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # ENTRADA DATOS  # # # # # # # # # 
+N = int(input())
+A = []
+for i in range(N):
+    fila = input().split()
+    fila = [Fraction(e) for e in fila]    
+    A.append(fila)
+
+print("\n")
+ 
+
+# # # # # # # # # MATRIZ A # # # # # # # # # 
+A = np.array(A)
+A2 = np.array(A)
+ImprimirMatriz(A)
+
+print("\n\n\n")
+
+MatrizTriangularSuperior(A2,N)
 
 print("\nAsí")
+
+
 print("\\begin{equation*}")
-print("\tA^{-1}=")
-ImprimirMatriz(LaMatrizInversa)
-print("\\end{equation*}")
+ImprimirDetMatriz(A,N)
+
+print("=", end=' ')
+ImprimirDetMatriz(A2,N)
+
+print("=", end=' ')
+c=DeterminanteMatrizTriangularSuperior(A2,N)
+
+print("=", end=' ')
+ImprimirPosibleFraccion(c)
+
+print("\n\\end{equation*}")
